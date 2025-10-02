@@ -1,5 +1,4 @@
 <div class="users-page">
-  <!-- Toolbar -->
   <div class="toolbar">
     <div class="left">
       <dx-button text="افزودن کاربر" icon="plus" (onClick)="openAdd()"></dx-button>
@@ -9,14 +8,12 @@
         placeholder="جستجو بر اساس نام / نام‌خانوادگی / کد ملی"
         [(value)]="searchQuery"
         (onValueChanged)="onSearchChange()"
-      >
-      </dx-text-box>
+      ></dx-text-box>
     </div>
   </div>
 
   <dx-data-grid
     [dataSource]="filtered"
-    id="dataGrid"
     keyExpr="id"
     [showBorders]="true"
     [rowAlternationEnabled]="true"
@@ -26,7 +23,6 @@
     [allowColumnResizing]="true"
     [columnAutoWidth]="true"
   >
-    <!-- ستون عکس -->
     <dxi-column
       caption="عکس"
       width="100"
@@ -37,7 +33,6 @@
       <img class="thumb" [src]="getPhotoThumbnail(data)" alt="photo" />
     </ng-template>
 
-    <!-- ستون داده -->
     <dxi-column dataField="firstName" caption="نام"></dxi-column>
     <dxi-column dataField="lastName" caption="نام خانوادگی"></dxi-column>
     <dxi-column dataField="age" caption="سن" dataType="number" width="80"></dxi-column>
@@ -45,11 +40,14 @@
     <dxi-column dataField="nationalId" caption="کد ملی"></dxi-column>
     <dxi-column dataField="birthDate" caption="تاریخ تولد" dataType="date"></dxi-column>
 
-    <dxo-editing mode="popup" [allowUpdating]="true" [allowDeleting]="true" [allowAdding]="false">
-    </dxo-editing>
+    <dxo-editing
+      mode="popup"
+      [allowUpdating]="true"
+      [allowDeleting]="true"
+      [allowAdding]="false"
+    ></dxo-editing>
   </dx-data-grid>
 
-  <!-- Popup -->
   <dx-popup
     [(visible)]="popupVisible"
     [showTitle]="true"
@@ -58,80 +56,102 @@
     title="{{ isEditMode ? 'ویرایش کاربر' : 'افزودن کاربر' }}"
   >
     <div class="popup-content">
-      <dx-form [formData]="formData" [validationGroup]="'userForm'">
-        <dxi-item dataField="photo" editorType="dxFileUploader">
-          <dx-file-uploader
-            [multiple]="true"
-            uploadMode="useButtons"
-            [allowCanceling]="true"
-            accept="image/*"
-            [maxFileSize]="32000000"
-            labelText="عکس پروفایل"
-            dropZone=".file-uploader-block"
-          ></dx-file-uploader>
-        </dxi-item>
-
-        <dxi-item dataField="firstName" editorType="dxTextBox" label="{ text: 'نام' }" [editorOptions]="{}">
-          <dxi-validation-rule
-            type="required"
-            message="لطفاً نام را وارد کنید"
-          ></dxi-validation-rule>
-        </dxi-item>
-
-        <dxi-item dataField="lastName" editorType="dxTextBox" label="{ text: 'نام خانوادگی' }" [editorOptions]="{}">
-          <dxi-validation-rule
-            type="required"
-            message="لطفاً نام خانوادگی را وارد کنید"
-          ></dxi-validation-rule>
-        </dxi-item>
-
-        <dxi-item dataField="age" editorType="dxNumberBox" label="{ text: 'سن' }">
-          <dxi-validation-rule
-            type="required"
-            message="لطفاً سن را وارد کنید"
-          ></dxi-validation-rule>
-          <dxi-validation-rule
-            type="range"
-            [min]="1"
-            [max]="100"
-            message="سن باید بین 1 تا 100 باشد"
-          ></dxi-validation-rule>
-        </dxi-item>
-
-        <dxi-item
-          dataField="education"
-          editorType="dxSelectBox"
-          [editorOptions]="{ items: educationOptions, searchEnabled: true }"
-          label="{ text: 'تحصیلات' }"
+      <dx-validation-group #userValidationGroup>
+        <dx-file-uploader
+          [value]="fileUploaderFiles"
+          [multiple]="false"
+          uploadMode="useButtons"
+          [allowCanceling]="true"
+          accept="image/*"
+          [maxFileSize]="32000000"
+          labelText="عکس پروفایل"
+          (onValueChanged)="onFileChanged($event)"
         >
-          <dxi-validation-rule
-            type="required"
-            message="لطفاً تحصیلات را انتخاب کنید"
-          ></dxi-validation-rule>
-        </dxi-item>
+        </dx-file-uploader>
 
-        <dxi-item dataField="nationalId" editorType="dxTextBox" label="{ text: 'کد ملی' }" [editorOptions]="{}">
-          <dxi-validation-rule
-            type="required"
-            message="لطفاً کد ملی را وارد کنید"
-          ></dxi-validation-rule
-        ></dxi-item>
+        <dx-text-box [(value)]="formData.firstName" placeholder="نام">
+          <dx-validator>
+            <dxi-validation-rule
+              type="required"
+              message="لطفاً نام را وارد کنید"
+            ></dxi-validation-rule>
+          </dx-validator>
+        </dx-text-box>
 
-        <dxi-item dataField="birthDate" editorType="dxDateBox" label="{ text: 'تاریخ تولد' }" [editorOptions]="{}">
-          <dxi-validation-rule
-            type="required"
-            message="لطفاً تاریخ تولد را وارد کنید"
-          ></dxi-validation-rule>
-        </dxi-item>
-      </dx-form>
+        <dx-text-box [(value)]="formData.lastName" placeholder="نام خانوادگی">
+          <dx-validator>
+            <dxi-validation-rule
+              type="required"
+              message="لطفاً نام خانوادگی را وارد کنید"
+            ></dxi-validation-rule>
+          </dx-validator>
+        </dx-text-box>
 
-      <div class="popup-actions">
-        <dx-button
-          text="انصراف"
-          stylingMode="outlined"
-          (onClick)="popupVisible = false"
-        ></dx-button>
-        <dx-button text="ذخیره" type="success" (onClick)="saveForm()"></dx-button>
+        <dx-number-box [(value)]="formData.age" placeholder="سن">
+          <dx-validator>
+            <dxi-validation-rule
+              type="required"
+              message="لطفاً سن را وارد کنید"
+            ></dxi-validation-rule>
+            <dxi-validation-rule
+              type="range"
+              [min]="1"
+              [max]="100"
+              message="سن باید بین 1 تا 100 باشد"
+            ></dxi-validation-rule>
+          </dx-validator>
+        </dx-number-box>
+
+        <dx-select-box
+          [(value)]="formData.education"
+          [items]="educationOptions"
+          placeholder="تحصیلات"
+          [searchEnabled]="true"
+        >
+          <dx-validator>
+            <dxi-validation-rule
+              type="required"
+              message="لطفاً تحصیلات را انتخاب کنید"
+            ></dxi-validation-rule>
+          </dx-validator>
+        </dx-select-box>
+
+        <dx-text-box [(value)]="formData.nationalId" placeholder="کد ملی">
+          <dx-validator>
+            <dxi-validation-rule
+              type="required"
+              message="لطفاً کد ملی را وارد کنید"
+            ></dxi-validation-rule>
+          </dx-validator>
+        </dx-text-box>
+
+        <dx-date-box [(value)]="formData.birthDate" placeholder="تاریخ تولد">
+          <dx-validator>
+            <dxi-validation-rule
+              type="required"
+              message="لطفاً تاریخ تولد را وارد کنید"
+            ></dxi-validation-rule>
+          </dx-validator>
+        </dx-date-box>
+
+        <dx-validation-summary></dx-validation-summary>
+
+        <div class="popup-actions">
+          <dx-button
+            text="انصراف"
+            stylingMode="outlined"
+            (onClick)="popupVisible = false"
+          ></dx-button>
+          <dx-button
+            text="ذخیره"
+            type="success"
+            (onClick)="validateAndSave(userValidationGroup)"
+          ></dx-button>
+        </div>
+      </dx-validation-group>
+
+      <div *ngIf="previewPhoto" class="preview">
+        <img [src]="previewPhoto" alt="preview" class="thumb" />
       </div>
     </div>
   </dx-popup>

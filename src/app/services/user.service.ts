@@ -98,7 +98,7 @@ export class UserService {
       const photo = `https://i.pravatar.cc/150?img=${i+10}`; 
       return {
         id: uuidv4(),
-        photo,
+        photo: null,
         firstName: n[0],
         lastName: n[1],
         age,

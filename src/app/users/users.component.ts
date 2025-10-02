@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import {
   DxDataGridModule,
   DxPopupModule,
-  DxFormModule,
   DxFileUploaderModule,
   DxButtonModule,
   DxTextBoxModule,
   DxDateBoxModule,
   DxNumberBoxModule,
   DxSelectBoxModule,
+  DxValidationGroupModule,
+  DxValidationSummaryModule,
+  DxValidatorModule,
 } from 'devextreme-angular';
 import { User } from '../models/user.model';
 import { UserService } from '../services/user.service';
@@ -24,13 +26,15 @@ import { FormsModule } from '@angular/forms';
     FormsModule,
     DxDataGridModule,
     DxPopupModule,
-    DxFormModule,
     DxFileUploaderModule,
     DxButtonModule,
     DxTextBoxModule,
     DxDateBoxModule,
     DxNumberBoxModule,
     DxSelectBoxModule,
+    DxValidationGroupModule,
+    DxValidationSummaryModule,
+    DxValidatorModule
   ],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
@@ -40,15 +44,24 @@ export class UsersComponent implements OnInit, OnDestroy {
   filtered: User[] = [];
   sub: Subscription | undefined;
 
-  // برای popup و فرم
   popupVisible = false;
   isEditMode = false;
-  formData: Partial<User> = {};
 
-  // جستجو
+  formData: User = {
+    id: '',
+    photo: null,
+    firstName: '',
+    lastName: '',
+    age: 18,
+    education: '',
+    nationalId: '',
+    birthDate: new Date().toISOString().slice(0, 10),
+  };
+
+  fileUploaderFiles: File[] = [];
+  previewPhoto: string | null = null;
+
   searchQuery = '';
-
-  // گزینه‌های تحصیلات (نمونه)
   educationOptions = [
     'BSc Computer Science',
     'MSc Design',
@@ -82,6 +95,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   openAdd() {
     this.isEditMode = false;
     this.formData = {
+      id: '',
       photo: null,
       firstName: '',
       lastName: '',
@@ -90,52 +104,56 @@ export class UsersComponent implements OnInit, OnDestroy {
       nationalId: '',
       birthDate: new Date().toISOString().slice(0, 10),
     };
+    this.previewPhoto = null;
     this.popupVisible = true;
   }
 
-  //   openEdit(user: User) {
-  //     this.isEditMode = true;
-  //     this.formData = { ...user };
-  //     this.popupVisible = true;
-  //   }
-
-  //   onDelete(id: string) {
-  //     if (!confirm('آیا از حذف کاربر مطمئنی؟')) return;
-  //     this.userService.delete(id);
-  //   }
-
-  // فایل آپلود شده -> خواندن به base64 یا استفاده از آدرس temp (در اینجا خواندن base64)
   onFileChanged(e: any) {
-    const files: File[] = e?.value;
-    if (!files || files.length === 0) return;
+    const files: File[] = e.value;
+    if (!files || files.length === 0) {
+      this.formData.photo = null;
+      this.previewPhoto = null;
+      this.fileUploaderFiles = [];
+      return;
+    }
+
     const file = files[0];
+
+    // فقط عکس
+    if (!file.type.startsWith('image/')) {
+      alert('لطفاً فقط فایل تصویر انتخاب کنید');
+      e.component.reset();
+      return;
+    }
+
+    this.formData.photo = file;
+    this.fileUploaderFiles = [file];
+
     const reader = new FileReader();
     reader.onload = () => {
-      this.formData.photo = reader.result as string;
+      this.previewPhoto = reader.result as string;
     };
     reader.readAsDataURL(file);
   }
 
-  submitButtonOptions = {
-    text: 'ذخیره',
-    type: 'success',
-    useSubmitBehavior: false, // نیازی به submit HTML نیست، DevExtreme خودش onClick رو مدیریت می‌کنه
-    onClick: () => this.saveForm(),
-  };
-
-  handleSubmit = function (e: any) {
-    setTimeout(() => {
-      alert('Submitted');
-    }, 1000);
-
-    e.preventDefault();
-  };
+  validateAndSave(group: any) {
+    const result = group.instance.validate();
+    if (!result.isValid) return;
+    this.saveForm();
+  }
 
   saveForm() {
-    // اعتبارسنجی ساده در سمت TS (همه فیلدها باید مقدار داشته باشند)
-    const required = ['firstName', 'lastName', 'age', 'education', 'nationalId', 'birthDate'];
-    for (const k of required) {
-      const val = (this.formData as any)[k];
+    const requiredFields: (keyof User)[] = [
+      'firstName',
+      'lastName',
+      'age',
+      'education',
+      'nationalId',
+      'birthDate',
+    ];
+
+    for (const field of requiredFields) {
+      const val = this.formData[field];
       if (val === undefined || val === null || String(val).trim() === '') {
         alert('لطفاً تمام فیلدهای اجباری را تکمیل کنید.');
         return;
@@ -143,29 +161,19 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
 
     if (this.isEditMode && this.formData.id) {
-      this.userService.update(this.formData.id, this.formData as Partial<User>);
+      this.userService.update(this.formData.id, this.formData);
     } else {
-      // create نیاز به نوع کامل
-      const payload: Omit<User, 'id'> = {
-        photo: this.formData.photo || null,
-        firstName: this.formData.firstName!.trim(),
-        lastName: this.formData.lastName!.trim(),
-        age: Number(this.formData.age),
-        education: this.formData.education!.trim(),
-        nationalId: this.formData.nationalId!.trim(),
-        birthDate: this.formData.birthDate!,
-      };
-      this.userService.create(payload);
+      this.userService.create(this.formData);
     }
 
     this.popupVisible = false;
   }
 
-  // نمایش پیش‌نمایش عکس در grid و popup
-  getPhotoThumbnail(user: User | Partial<User>) {
-    if (!user.photo || user.photo === 'null') {
-      return 'assets/avatar-placeholder.png';
+  getPhotoThumbnail(user: User) {
+    if (!user.photo) return 'assets/avatar-placeholder.png';
+    if (user.photo instanceof File) {
+      return URL.createObjectURL(user.photo);
     }
-    return user.photo;
+    return 'assets/avatar-placeholder.png';
   }
 }
