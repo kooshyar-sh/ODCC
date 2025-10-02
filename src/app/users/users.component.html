@@ -69,7 +69,7 @@
         >
         </dx-file-uploader>
 
-        <dx-text-box [(value)]="formData.firstName" placeholder="نام">
+        <dx-text-box class="form-item" [(value)]="formData.firstName" placeholder="نام">
           <dx-validator>
             <dxi-validation-rule
               type="required"
@@ -78,7 +78,7 @@
           </dx-validator>
         </dx-text-box>
 
-        <dx-text-box [(value)]="formData.lastName" placeholder="نام خانوادگی">
+        <dx-text-box class="form-item" [(value)]="formData.lastName" placeholder="نام خانوادگی">
           <dx-validator>
             <dxi-validation-rule
               type="required"
@@ -87,7 +87,7 @@
           </dx-validator>
         </dx-text-box>
 
-        <dx-number-box [(value)]="formData.age" placeholder="سن">
+        <dx-number-box class="form-item" [(value)]="formData.age" placeholder="سن">
           <dx-validator>
             <dxi-validation-rule
               type="required"
@@ -102,7 +102,7 @@
           </dx-validator>
         </dx-number-box>
 
-        <dx-select-box
+        <dx-select-box class="form-item"
           [(value)]="formData.education"
           [items]="educationOptions"
           placeholder="تحصیلات"
@@ -116,7 +116,7 @@
           </dx-validator>
         </dx-select-box>
 
-        <dx-text-box [(value)]="formData.nationalId" placeholder="کد ملی">
+        <dx-text-box class="form-item" [(value)]="formData.nationalId" placeholder="کد ملی">
           <dx-validator>
             <dxi-validation-rule
               type="required"
@@ -125,7 +125,7 @@
           </dx-validator>
         </dx-text-box>
 
-        <dx-date-box [(value)]="formData.birthDate" placeholder="تاریخ تولد">
+        <dx-date-box class="form-item" [(value)]="formData.birthDate" placeholder="تاریخ تولد">
           <dx-validator>
             <dxi-validation-rule
               type="required"
